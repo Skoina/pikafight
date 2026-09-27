@@ -1,0 +1,39 @@
+{
+  "name": "Black Dog Daoist Boss",
+  "format": "individual transparent PNG layers",
+  "combat": {
+    "maxHp": 1000,
+    "defense": 30,
+    "attackSpeedMultiplier": 2,
+    "fireballAttack": 55,
+    "lightningAttackPerStrike": 55,
+    "shieldExplosionAttack": 80,
+    "shieldSeconds": 3,
+    "damageVariation": [-5, 5]
+  },
+  "character": {
+    "idle": "idle.png",
+    "castFrames": ["cast-01.png", "cast-02.png", "cast-03.png"],
+    "jumpBack": "jump-back.png"
+  },
+  "spells": [
+    {
+      "name": "fireball",
+      "image": "fireball.png",
+      "sequence": "cast-01 -> cast-02 -> cast-03 -> projectile -> jump-back",
+      "behavior": "Aim at the hero's position on release. Move the fireball in a straight line; remove it on collision or when it leaves the map. Move the boss one step backward during the hop."
+    },
+    {
+      "name": "lightning",
+      "images": ["lightning-inner-3.png", "lightning-middle-6.png", "lightning-outer-9.png"],
+      "sequence": "cast-01 -> cast-02 -> cast-03 -> inner 3 -> middle 6 -> outer 9",
+      "behavior": "Show each ring separately in order from near to far."
+    },
+    {
+      "name": "shield",
+      "images": ["shield.png", "shield-explosion.png"],
+      "sequence": "cast-01 -> cast-02 -> cast-03 -> shield and approach for 3 seconds -> explosion",
+      "behavior": "Boss is invulnerable for the full 3-second countdown and walks toward the hero. At zero, remove the shield and trigger the explosion."
+    }
+  ]
+}

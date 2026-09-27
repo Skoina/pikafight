@@ -1,0 +1,39 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>黑犬道士 Boss 法術預覽</title>
+  <style>
+    :root { color-scheme: dark; font-family: system-ui, sans-serif; }
+    * { box-sizing: border-box; }
+    body { margin: 0; background: #10131c; color: #f1eee7; }
+    main { max-width: 1120px; margin: 0 auto; padding: 28px 16px 40px; }
+    h1 { margin: 0 0 8px; font-size: clamp(24px, 4vw, 38px); }
+    p { margin: 0 0 18px; color: #b9bdc9; line-height: 1.5; }
+    .stage { position: relative; width: 100%; aspect-ratio: 5 / 3; border: 1px solid #4b5161; border-radius: 16px; overflow: hidden; background: #1b2231; box-shadow: 0 18px 55px #0008; }
+    canvas { display: block; width: 100%; height: 100%; }
+    .hud { position: absolute; left: 20px; top: 18px; padding: 10px 14px; background: #0d111bd9; border: 1px solid #777b8b78; border-radius: 10px; font-weight: 700; }
+    .count { position: absolute; left: 50%; top: 12%; transform: translateX(-50%); font-size: clamp(32px, 6vw, 74px); font-weight: 900; color: #fff4c8; text-shadow: 0 0 22px #48baff, 0 3px 4px #0b1524; }
+    .controls { display: flex; gap: 10px; align-items: center; margin: 16px 0; flex-wrap: wrap; }
+    button { border: 1px solid #d4b476; background: #342d27; color: #fff0d3; border-radius: 8px; padding: 10px 16px; font: inherit; cursor: pointer; }
+    button:hover { background: #51432f; }
+    .legend { display: flex; gap: 16px; flex-wrap: wrap; color: #c6c6d1; font-size: 14px; }
+    .legend span::before { content: "●"; color: #d4b476; margin-right: 6px; }
+  </style>
+</head>
+<body>
+  <main>
+    <h1>黑犬道士 Boss · 法術動作預覽</h1>
+    <p>三張揮扇影格依序播放。圖像皆為獨立透明素材；此頁示範三種法術的動作與時間安排。</p>
+    <div class="stage">
+      <canvas id="stage" width="1000" height="600" aria-label="黑犬道士連續施放火球、落雷和護罩爆炸的動畫"></canvas>
+      <div class="hud" id="status">載入素材中…</div>
+      <div class="count" id="count"></div>
+    </div>
+    <div class="controls"><button id="toggle" type="button">暫停</button><button id="replay" type="button">從頭播放</button></div>
+    <div class="legend"><span>火球直線飛行，離開畫面後消失；道士後跳一步</span><span>落雷依序 3／6／9 道</span><span>護罩無敵 3 秒，向主角移動後爆炸</span></div>
+  </main>
+  <script src="preview.js"></script>
+</body>
+</html>
