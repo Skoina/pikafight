@@ -92,7 +92,10 @@
     hp: currentMap === 'town' ? initialStats.maxHp :
       Number.isFinite(saved.hp) ? Math.max(1, Math.min(initialStats.maxHp, Math.floor(saved.hp))) : initialStats.maxHp,
     ...initialStats,
-    attackSpeed: Progression.playerAttackSpeed,
+    // Older cached progression files did not expose this value. A missing speed
+    // would turn the attack timer into NaN and prevent every strike from landing.
+    attackSpeed: Number.isFinite(Progression.playerAttackSpeed) && Progression.playerAttackSpeed > 0
+      ? Progression.playerAttackSpeed : 1.3,
     attack: initialStats.attack + initialBonus.attack,
     defense: initialStats.defense + initialBonus.defense
   };

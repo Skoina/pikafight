@@ -1,6 +1,7 @@
 const Progression = (() => {
   const levelThresholds = [0, 100, 250, 450, 700, 950, 1200, 1450, 1700, 2000];
   const maxLevel = 10;
+  const playerAttackSpeed = 1.3;
   const cat = Object.freeze({ maxHp: 45, attack: 18, defense: 10, attackSpeed: 1,
     experience: 25, gold: 40, goldVariation: 5 });
   const eliteCat = Object.freeze({ maxHp: 100, attack: 30, defense: 20, attackSpeed: 1.5,
@@ -11,9 +12,9 @@ const Progression = (() => {
     const ordinaryLevels = Math.min(safeLevel - 1, 8);
     const finalBonus = safeLevel === 10 ? 20 : 0;
     return {
-      maxHp: 100 + (safeLevel - 1) * 10,
-      attack: 10 + ordinaryLevels * 4 + finalBonus,
-      defense: 10 + ordinaryLevels * 3 + finalBonus
+      maxHp: 200 + (safeLevel - 1) * 10,
+      attack: 15 + ordinaryLevels * 4 + finalBonus,
+      defense: 15 + ordinaryLevels * 3 + finalBonus
     };
   }
 
@@ -75,7 +76,8 @@ const Progression = (() => {
       (levelThresholds[level] - levelThresholds[level - 1]));
   }
 
-  return { levelThresholds, maxLevel, cat, eliteCat, statsForLevel, levelForExperience,
+  return { levelThresholds, maxLevel, playerAttackSpeed, cat, eliteCat,
+    statsForLevel, levelForExperience,
     nextThreshold, damage, rolledDamage, attackTiming, attackPose, grantExperience,
     goldDrop, migrateExperience };
 })();
