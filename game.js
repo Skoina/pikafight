@@ -38,7 +38,10 @@
   const storyEnabled = !demo && !townPreview && !riverPreview && !altarPreview;
   let hasEnteredGame = !storyEnabled;
   let startRequested = false;
-  if (hasEnteredGame) startScreen.hidden = true;
+  if (hasEnteredGame) {
+    startScreen.hidden = true;
+    document.body.classList.add('game-entered');
+  }
   const start = combatPreview ? { x: 960, y: 450 } :
     demo === 'range' ? { x: 820, y: 450 } : { x: 794, y: 445 };
   const saved = (() => {
@@ -86,8 +89,10 @@
     y: storyEnabled || townPreview ? 460 : riverPreview ? 390 : altarPreview ? 550 : start.y, facing: 0, step: 0,
     level: initialLevel, experience: initialExperience,
     gold: Number.isFinite(saved.gold) ? Math.max(0, Math.floor(saved.gold)) : 0,
-    hp: Number.isFinite(saved.hp) ? Math.max(1, Math.min(initialStats.maxHp, Math.floor(saved.hp))) : initialStats.maxHp,
+    hp: currentMap === 'town' ? initialStats.maxHp :
+      Number.isFinite(saved.hp) ? Math.max(1, Math.min(initialStats.maxHp, Math.floor(saved.hp))) : initialStats.maxHp,
     ...initialStats,
+    attackSpeed: Progression.playerAttackSpeed,
     attack: initialStats.attack + initialBonus.attack,
     defense: initialStats.defense + initialBonus.defense
   };
@@ -184,6 +189,7 @@
     hasEnteredGame = true;
     keys.clear();
     startScreen.hidden = true;
+    document.body.classList.add('game-entered');
     if (!introSeen) beginStory('intro');
   }
 
@@ -281,6 +287,11 @@
       name === 'altar' ? '禁忌天壇' : '竹影迷林';
     locationTitle.textContent = title;
     canvas.setAttribute('aria-label', title + '探索地圖');
+    if (name === 'town') {
+      player.hp = player.maxHp;
+      updateHud();
+      persistProfile();
+    }
   }
 
   function nearestAction() {
@@ -600,7 +611,7 @@
     if (result.levelsGained > 0) {
       player.level = result.level;
       applyEquipmentStats();
-      player.hp = Math.min(player.maxHp, player.hp + 10 * result.levelsGained);
+      player.hp = player.maxHp;
       battle.levelUp = 1.5;
       battle.levelReached = player.level;
       seenPhases.add('levelUp');
@@ -648,10 +659,11 @@
       seenPhases.add('dogWindup');
     }
     if (battle.dog.active) {
-      battle.dog.elapsed += dt;
+      battle.dog.elapsed += dt * player.attackSpeed;
       if (!battle.dog.hit && battle.dog.elapsed >= .2) {
         battle.dog.hit = true;
-        battle.effects.push({ owner: 'dog', age: 0, duration: inventory.weapon ? .57 : .36,
+        battle.effects.push({ owner: 'dog', age: 0,
+          duration: (inventory.weapon ? .57 : .36) / player.attackSpeed,
           weapon: inventory.weapon, x: player.x, y: player.y,
           direction: daoist.x < player.x ? -1 : 1 });
         battle.effectsCreated++;
@@ -669,7 +681,7 @@
       }
       if (battle.dog.elapsed >= (inventory.weapon ? .62 : .48)) {
         battle.dog.active = false;
-        battle.dog.cooldown = .34;
+        battle.dog.cooldown = .34 / player.attackSpeed;
       }
     }
     for (const hit of DaoistBoss.update(daoist, player, dt, AltarTerrain)) {
@@ -745,10 +757,11 @@
       seenPhases.add('dogWindup');
     }
     if (battle.dog.active) {
-      battle.dog.elapsed += dt;
+      battle.dog.elapsed += dt * player.attackSpeed;
       if (!battle.dog.hit && battle.dog.elapsed >= .2) {
         battle.dog.hit = true;
-        battle.effects.push({ owner: 'dog', age: 0, duration: inventory.weapon ? .57 : .36,
+        battle.effects.push({ owner: 'dog', age: 0,
+          duration: (inventory.weapon ? .57 : .36) / player.attackSpeed,
           weapon: inventory.weapon, x: player.x, y: player.y,
           direction: nearest && nearest.x < player.x ? -1 : 1 });
         battle.effectsCreated++;
@@ -764,7 +777,7 @@
       }
       if (battle.dog.elapsed >= (inventory.weapon ? .62 : .48)) {
         battle.dog.active = false;
-        battle.dog.cooldown = .34;
+        battle.dog.cooldown = .34 / player.attackSpeed;
       }
     }
 

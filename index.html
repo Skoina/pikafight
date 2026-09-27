@@ -4,6 +4,11 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no">
   <meta name="theme-color" content="#142d25">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="中秋事變">
+  <meta name="mobile-web-app-capable" content="yes">
+  <link rel="manifest" href="manifest.webmanifest">
   <title>中秋事變</title>
   <style>
     :root { color-scheme: dark; font-family: "Noto Sans TC", "PingFang TC", "Microsoft JhengHei", sans-serif; }
@@ -25,9 +30,10 @@
     .meter i { display: block; height: 100%; border-radius: inherit; transition: width .22s; }
     .hp-meter i { background: linear-gradient(90deg, #df735b, #ffa48b); }
     .xp-meter i { background: linear-gradient(90deg, #dcae57, #fff0a2); }
-    .reset { pointer-events: auto; position: absolute; top: calc(env(safe-area-inset-top) + 22px); right: max(18px, env(safe-area-inset-right)); width: 42px; height: 42px; padding: 0; border: 1px solid rgba(255, 255, 255, .35); border-radius: 50%; background: rgba(16, 39, 31, .62); color: #fff9e9; font-size: 21px; cursor: pointer; backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px); }
+    .reset { pointer-events: auto; position: absolute; top: calc(env(safe-area-inset-top) + 22px); right: calc(max(18px, env(safe-area-inset-right)) + 52px); width: 42px; height: 42px; padding: 0; border: 1px solid rgba(255, 255, 255, .35); border-radius: 50%; background: rgba(16, 39, 31, .62); color: #fff9e9; font-size: 21px; cursor: pointer; backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px); }
     .reset:active { transform: scale(.94); }
-    .music-toggle { right: calc(max(18px, env(safe-area-inset-right)) + 52px); font-size: 20px; }
+    .music-toggle { right: calc(max(18px, env(safe-area-inset-right)) + 104px); font-size: 20px; }
+    .fullscreen-toggle { right: max(18px, env(safe-area-inset-right)); font-size: 23px; }
     .action { display: none; pointer-events: auto; position: absolute; left: 50%; bottom: calc(env(safe-area-inset-bottom) + 174px); transform: translateX(-50%); min-width: 112px; padding: 11px 17px; border: 1px solid #ffe4a2; border-radius: 30px; background: rgba(37, 56, 43, .9); color: #fff4d3; font-family: inherit; font-size: 14px; font-weight: 700; box-shadow: 0 6px 22px #0007; cursor: pointer; }
     .action.visible { display: block; }
     .shop { display: none; pointer-events: auto; position: absolute; z-index: 3; left: 50%; top: 50%; transform: translate(-50%, -50%); width: min(92vw, 420px); max-height: min(75dvh, 570px); overflow: auto; padding: 19px; border: 1px solid #d9be81; border-radius: 18px; background: rgba(28, 41, 34, .96); color: #fff5dc; box-shadow: 0 20px 60px #000a; }
@@ -77,6 +83,21 @@
     .start-button { min-width: 190px; min-height: 54px; padding: 12px 28px; border: 1px solid #f9dda3; border-radius: 999px; background: #42281ddd; color: #fff2cf; font: 700 21px "Noto Serif TC", serif; letter-spacing: .16em; box-shadow: 0 6px 24px #0009; cursor: pointer; }
     .start-button:hover, .start-button:focus-visible { background: #68402add; outline: 2px solid #ffe9ae; outline-offset: 3px; }
     .start-button:disabled { opacity: .7; cursor: wait; }
+    .display-advice { display: none; max-width: min(90vw, 420px); padding: 12px 18px; border: 1px solid #f9dda388; border-radius: 16px; background: #14231ee8; color: #fff5d9; text-align: center; line-height: 1.5; box-shadow: 0 8px 24px #0008; }
+    .mobile-device .display-advice { display: block; }
+    .display-advice strong { display: block; font-size: 16px; }
+    .display-advice p { margin: 4px 0 0; font-size: 13px; }
+    .display-help { pointer-events: auto; position: fixed; inset: 0; z-index: 12; display: grid; place-items: center; padding: 20px; background: #081510d9; }
+    .display-help[hidden] { display: none; }
+    .display-help-card { width: min(92vw, 420px); max-height: 85dvh; overflow: auto; padding: 20px; border: 1px solid #e5ca8c; border-radius: 18px; background: #1b2b24; color: #fff5d9; line-height: 1.6; box-shadow: 0 16px 50px #000a; }
+    .display-help-card h2 { margin: 0 0 8px; font-size: 20px; }
+    .display-help-card p { margin: 0 0 12px; font-size: 14px; }
+    .display-help-actions { display: flex; flex-wrap: wrap; gap: 9px; }
+    .display-help-actions button, .rotate-dismiss { min-height: 42px; padding: 8px 16px; border: 1px solid #e5ca8c; border-radius: 24px; background: #725632; color: #fff8e6; font: inherit; cursor: pointer; }
+    .rotate-overlay { display: none; position: fixed; inset: 0; z-index: 11; align-items: center; justify-content: center; flex-direction: column; gap: 12px; padding: 24px; background: #10251eef; color: #fff5d9; text-align: center; }
+    .rotate-overlay strong { font-size: 22px; }
+    .rotate-overlay p { max-width: 280px; margin: 0; line-height: 1.5; }
+    @media (orientation: portrait) { .mobile-device.game-entered .rotate-overlay:not(.dismissed) { display: flex; } }
     .ending { position: fixed; inset: 0; z-index: 8; overflow: hidden; visibility: hidden; opacity: 0; pointer-events: none; background: #111b25; color: #fff5d6; transition: opacity 4s ease, visibility 0s linear 4s; }
     .ending.visible { visibility: visible; opacity: 1; pointer-events: auto; transition: opacity 4s ease; }
     .ending::before { content: ""; position: absolute; inset: -32px; background: url('assets/game/moon-festival-ending.png') center / cover; filter: blur(24px) brightness(.48); }
@@ -101,8 +122,12 @@
       .heading { top: calc(env(safe-area-inset-top) + 10px); left: max(12px, env(safe-area-inset-left)); padding: 7px 11px; }
       .heading h1 { font-size: 17px; }
       .health { top: calc(env(safe-area-inset-top) + 72px); left: max(12px, env(safe-area-inset-left)); width: 154px; padding: 7px 9px; font-size: 10px; }
-      .reset { top: calc(env(safe-area-inset-top) + 12px); right: max(12px, env(safe-area-inset-right)); width: 38px; height: 38px; }
-      .music-toggle { right: calc(max(12px, env(safe-area-inset-right)) + 46px); }
+      .reset { top: calc(env(safe-area-inset-top) + 12px); right: calc(max(12px, env(safe-area-inset-right)) + 46px); width: 38px; height: 38px; }
+      .music-toggle { right: calc(max(12px, env(safe-area-inset-right)) + 92px); }
+      .fullscreen-toggle { right: max(12px, env(safe-area-inset-right)); }
+      .display-advice { padding: 8px 12px; }
+      .display-advice strong { font-size: 14px; }
+      .display-advice p { font-size: 12px; }
       .tip { left: max(12px, env(safe-area-inset-left)); bottom: calc(env(safe-area-inset-bottom) + 12px); }
       .joystick { right: max(14px, env(safe-area-inset-right)); bottom: calc(env(safe-area-inset-bottom) + 12px); width: 112px; height: 112px; }
       .joystick::before { height: 78px; }
@@ -124,6 +149,7 @@
     <div class="health" id="hp" aria-live="polite"></div>
     <button class="reset" id="reset" type="button" aria-label="返回起點" title="返回起點">⌖</button>
     <button class="reset music-toggle" id="music-toggle" type="button" aria-label="關閉音樂" aria-pressed="false" title="關閉音樂">♫</button>
+    <button class="reset fullscreen-toggle" id="fullscreen-toggle" type="button" aria-label="全螢幕選項" title="全螢幕選項">⛶</button>
     <div class="tip" id="tip">與三位商人交談，蒐集線索<br>完成後從村莊右邊出發</div>
     <button class="action" id="action" type="button"></button>
     <section class="shop" id="shop" role="dialog" aria-modal="true" aria-labelledby="shop-title">
@@ -143,7 +169,23 @@
   </div>
   <section class="start-screen" id="start-screen" aria-labelledby="start-title">
     <h1 class="start-title" id="start-title">中秋事變</h1>
+    <div class="display-advice" id="display-advice" role="note"><strong>建議橫向全螢幕遊玩</strong><p id="display-advice-text">請先將手機轉橫向，再按下方按鈕。</p></div>
     <button class="start-button" id="start-button" type="button">進入遊戲</button>
+  </section>
+  <section class="display-help" id="display-help" role="dialog" aria-modal="true" aria-labelledby="display-help-title" hidden>
+    <div class="display-help-card">
+      <h2 id="display-help-title">全螢幕遊玩</h2>
+      <p id="display-help-text"></p>
+      <div class="display-help-actions">
+        <button id="copy-game-link" type="button">複製遊戲連結</button>
+        <button id="display-help-close" type="button">繼續遊戲</button>
+      </div>
+    </div>
+  </section>
+  <section class="rotate-overlay" id="rotate-overlay" aria-label="橫向遊玩提示">
+    <strong>請將手機轉橫向</strong>
+    <p>橫向畫面能完整顯示地圖與操作按鈕。如未旋轉，請檢查手機的直向鎖定。</p>
+    <button class="rotate-dismiss" id="rotate-dismiss" type="button">暫時直向遊玩</button>
   </section>
   <section class="ending" id="ending" aria-label="中秋節結局賀圖" aria-hidden="true" tabindex="-1">
     <img class="ending-art" src="assets/game/moon-festival-ending.png" alt="小狗俠客與三位商人在滿月下的汴河古鎮歡度中秋">
@@ -170,6 +212,7 @@
   <script src="sprite-layouts.js"></script>
   <script src="attack-layouts.js"></script>
   <script src="map-music.js"></script>
+  <script src="mobile-display.js"></script>
   <script src="game.js"></script>
 </body>
 </html>

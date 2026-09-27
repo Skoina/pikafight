@@ -1,0 +1,10 @@
+{
+  "name": "中秋事變",
+  "short_name": "中秋事變",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "landscape",
+  "background_color": "#142d25",
+  "theme_color": "#142d25"
+}
