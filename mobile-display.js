@@ -1,19 +1,13 @@
 (() => {
-  const startButton = document.getElementById('start-button');
   const fullscreenButton = document.getElementById('fullscreen-toggle');
-  const advice = document.getElementById('display-advice-text');
   const help = document.getElementById('display-help');
   const helpText = document.getElementById('display-help-text');
   const closeHelp = document.getElementById('display-help-close');
   const copyLink = document.getElementById('copy-game-link');
-  const rotateOverlay = document.getElementById('rotate-overlay');
-  const rotateDismiss = document.getElementById('rotate-dismiss');
   const userAgent = navigator.userAgent || '';
   const isIOS = /iPhone|iPad|iPod/i.test(userAgent) ||
     (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
   const isInApp = /Instagram|FBAN|FBAV|FB_IAB|Line\/|MicroMessenger/i.test(userAgent);
-  const isMobile = /Android|iPhone|iPad|iPod/i.test(userAgent) ||
-    (navigator.maxTouchPoints > 1 && matchMedia('(max-width: 1100px)').matches);
   const isStandalone = () => navigator.standalone === true ||
     matchMedia('(display-mode: standalone)').matches ||
     matchMedia('(display-mode: fullscreen)').matches;
@@ -21,21 +15,57 @@
   const requestFullscreen = document.documentElement.requestFullscreen ||
     document.documentElement.webkitRequestFullscreen;
 
-  if (isMobile) document.body.classList.add('mobile-device');
-  if (isMobile && !isStandalone()) {
-    if (isInApp) {
-      advice.textContent = '請先轉橫向。IG、LINE 等內建瀏覽器可嘗試全螢幕；若工具列仍在，請用選單改由手機瀏覽器開啟。';
-    } else if (isIOS) {
-      advice.textContent = '請先轉橫向。iPhone 可從 Safari「分享 → 加入主畫面」，由桌面圖示開啟以隱藏網址列。';
-    } else {
-      advice.textContent = '請先轉橫向，按「全螢幕並進入遊戲」可嘗試隱藏瀏覽器工具列。';
+  const viewport = document.getElementById('viewport');
+  const shell = document.getElementById('game-shell');
+  let pendingLayout = false;
+
+  function fitViewport() {
+    pendingLayout = false;
+    const visible = window.visualViewport;
+    const viewWidth = visible?.width || window.innerWidth;
+    const viewHeight = visible?.height || window.innerHeight;
+    viewport.style.width = viewWidth + 'px';
+    viewport.style.height = viewHeight + 'px';
+    viewport.style.left = (visible?.offsetLeft || 0) + 'px';
+    viewport.style.top = (visible?.offsetTop || 0) + 'px';
+    const padding = getComputedStyle(viewport);
+    const left = parseFloat(padding.paddingLeft) || 0;
+    const right = parseFloat(padding.paddingRight) || 0;
+    const top = parseFloat(padding.paddingTop) || 0;
+    const bottom = parseFloat(padding.paddingBottom) || 0;
+    const availableWidth = Math.max(1, viewWidth - left - right);
+    const availableHeight = Math.max(1, viewHeight - top - bottom);
+    const landscape = availableWidth > availableHeight;
+    // Keep a complete, stable composition while browser bars reduce the space.
+    const compact = landscape ? availableHeight < 600 : availableWidth < 600;
+    const width = compact ? (landscape ? 844 : 390) : availableWidth;
+    const height = compact ? (landscape ? 420 : 720) : availableHeight;
+    const scale = Math.min(availableWidth / width, availableHeight / height);
+    shell.style.width = width + 'px';
+    shell.style.height = height + 'px';
+    shell.style.left = (left + (availableWidth - width * scale) / 2) + 'px';
+    shell.style.top = (top + (availableHeight - height * scale) / 2) + 'px';
+    shell.style.transform = `scale(${scale})`;
+    shell.style.setProperty('--game-vw', width / 100 + 'px');
+    shell.style.setProperty('--game-vh', height / 100 + 'px');
+    const previous = window.GameViewport;
+    window.GameViewport = { width, height, scale };
+    if (!previous || previous.width !== width || previous.height !== height || previous.scale !== scale) {
+      window.dispatchEvent(new Event('gameviewportchange'));
     }
-  } else if (isMobile) {
-    advice.textContent = '請將手機轉橫向，享受完整遊戲畫面。';
   }
-  if (isMobile && !isIOS && !isInApp && requestFullscreen && !isStandalone()) {
-    startButton.textContent = '全螢幕並進入遊戲';
+
+  function scheduleLayout() {
+    if (pendingLayout) return;
+    pendingLayout = true;
+    requestAnimationFrame(fitViewport);
   }
+  window.addEventListener('resize', scheduleLayout);
+  window.addEventListener('orientationchange', scheduleLayout);
+  window.addEventListener('pageshow', scheduleLayout);
+  window.visualViewport?.addEventListener('resize', scheduleLayout);
+  window.visualViewport?.addEventListener('scroll', scheduleLayout);
+  fitViewport();
 
   function helpMessage() {
     if (isStandalone()) return '你已從手機主畫面開啟遊戲。請將手機轉橫向；若畫面未旋轉，請關閉系統的直向鎖定。';
@@ -64,16 +94,13 @@
       await requestFullscreen.call(document.documentElement);
       if (screen.orientation && screen.orientation.lock) {
         try { await screen.orientation.lock('landscape'); }
-        catch { /* Orientation lock is optional; the rotation prompt remains available. */ }
+        catch { /* Fullscreen is optional; ordinary browser play works in either orientation. */ }
       }
     } catch {
       showHelp();
     }
   }
 
-  startButton.addEventListener('click', () => {
-    if (isMobile && !isStandalone()) void enterFullscreen();
-  });
   fullscreenButton.addEventListener('click', () => {
     if (fullscreenElement()) {
       const exit = document.exitFullscreen || document.webkitExitFullscreen;
@@ -102,6 +129,4 @@
       helpText.textContent += ' 複製失敗時，可從瀏覽器的分享選單複製連結。';
     }
   });
-  rotateDismiss.addEventListener('click', () => rotateOverlay.classList.add('dismissed'));
-  window.addEventListener('orientationchange', () => rotateOverlay.classList.remove('dismissed'));
 })();

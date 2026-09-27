@@ -455,9 +455,10 @@
   function clamp(value, min, max) { return Math.max(min, Math.min(max, value)); }
 
   function resize() {
-    width = window.innerWidth;
-    height = window.innerHeight;
-    dpr = Math.min(window.devicePixelRatio || 1, width < 500 ? 1.5 : 2);
+    const viewport = window.GameViewport;
+    width = viewport?.width || window.innerWidth;
+    height = viewport?.height || window.innerHeight;
+    dpr = Math.min((window.devicePixelRatio || 1) * (viewport?.scale || 1), 2);
     canvas.width = Math.round(width * dpr);
     canvas.height = Math.round(height * dpr);
     canvas.style.width = width + 'px';
@@ -483,7 +484,8 @@
     const py = Math.sin(angle) * amount;
     joystick.x = px / radius;
     joystick.y = py / radius;
-    thumb.style.transform = `translate(calc(-50% + ${px}px), calc(-50% + ${py}px))`;
+    const displayScale = window.GameViewport?.scale || 1;
+    thumb.style.transform = `translate(calc(-50% + ${px / displayScale}px), calc(-50% + ${py / displayScale}px))`;
   }
 
   function releaseStick(event) {
@@ -530,6 +532,7 @@
     keys.delete(event.key.length === 1 ? event.key.toLowerCase() : event.key);
   });
   window.addEventListener('blur', () => { keys.clear(); releaseStick(); });
+  window.addEventListener('gameviewportchange', resize);
   window.addEventListener('resize', resize);
   document.getElementById('reset').addEventListener('click', () => {
     if (storyState) return;
