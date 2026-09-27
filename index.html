@@ -1,0 +1,175 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no">
+  <meta name="theme-color" content="#142d25">
+  <title>中秋事變</title>
+  <style>
+    :root { color-scheme: dark; font-family: "Noto Sans TC", "PingFang TC", "Microsoft JhengHei", sans-serif; }
+    * { box-sizing: border-box; }
+    html, body { width: 100%; height: 100%; margin: 0; overflow: hidden; background: #142d25; }
+    body { user-select: none; -webkit-user-select: none; -webkit-touch-callout: none; }
+    #game { display: block; width: 100vw; height: 100dvh; touch-action: none; }
+    .hud { position: fixed; inset: 0; pointer-events: none; }
+    .heading { position: absolute; top: calc(env(safe-area-inset-top) + 18px); left: max(18px, env(safe-area-inset-left)); padding: 10px 15px 11px; border: 1px solid rgba(234, 245, 218, .25); border-radius: 16px; background: rgba(16, 39, 31, .68); box-shadow: 0 8px 24px rgba(0, 0, 0, .16); backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px); }
+    .heading h1 { margin: 0; color: #fff8df; font-family: Georgia, "Noto Serif TC", serif; font-size: 19px; font-weight: 700; letter-spacing: .15em; line-height: 1.3; }
+    .heading p { margin: 3px 0 0; color: #d9e8d5; font-size: 11px; letter-spacing: .12em; }
+    .health { position: absolute; top: calc(env(safe-area-inset-top) + 90px); left: max(18px, env(safe-area-inset-left)); width: 169px; padding: 9px 11px; border: 1px solid rgba(234, 245, 218, .18); border-radius: 12px; background: rgba(16, 39, 31, .74); color: #f5f0df; font-size: 11px; line-height: 1.4; letter-spacing: .03em; backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px); }
+    .stats-row { display: flex; align-items: center; justify-content: space-between; margin-bottom: 3px; }
+    .stats-row strong { color: #fff1ac; font-size: 16px; }
+    .gold { display: flex; align-items: center; gap: 3px; color: #ffe4a2; font-weight: 700; }
+    .gold img { width: 17px; height: 17px; object-fit: contain; }
+    .stats-caption { margin-top: 3px; }
+    .meter { height: 5px; margin: 4px 0 6px; overflow: hidden; border-radius: 9px; background: rgba(255,255,255,.22); }
+    .meter i { display: block; height: 100%; border-radius: inherit; transition: width .22s; }
+    .hp-meter i { background: linear-gradient(90deg, #df735b, #ffa48b); }
+    .xp-meter i { background: linear-gradient(90deg, #dcae57, #fff0a2); }
+    .reset { pointer-events: auto; position: absolute; top: calc(env(safe-area-inset-top) + 22px); right: max(18px, env(safe-area-inset-right)); width: 42px; height: 42px; padding: 0; border: 1px solid rgba(255, 255, 255, .35); border-radius: 50%; background: rgba(16, 39, 31, .62); color: #fff9e9; font-size: 21px; cursor: pointer; backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px); }
+    .reset:active { transform: scale(.94); }
+    .music-toggle { right: calc(max(18px, env(safe-area-inset-right)) + 52px); font-size: 20px; }
+    .action { display: none; pointer-events: auto; position: absolute; left: 50%; bottom: calc(env(safe-area-inset-bottom) + 174px); transform: translateX(-50%); min-width: 112px; padding: 11px 17px; border: 1px solid #ffe4a2; border-radius: 30px; background: rgba(37, 56, 43, .9); color: #fff4d3; font-family: inherit; font-size: 14px; font-weight: 700; box-shadow: 0 6px 22px #0007; cursor: pointer; }
+    .action.visible { display: block; }
+    .shop { display: none; pointer-events: auto; position: absolute; z-index: 3; left: 50%; top: 50%; transform: translate(-50%, -50%); width: min(92vw, 420px); max-height: min(75dvh, 570px); overflow: auto; padding: 19px; border: 1px solid #d9be81; border-radius: 18px; background: rgba(28, 41, 34, .96); color: #fff5dc; box-shadow: 0 20px 60px #000a; }
+    .shop.open { display: block; }
+    .shop-head { display: flex; justify-content: space-between; align-items: center; gap: 8px; }
+    .shop h2 { margin: 0; font: 700 22px Georgia, 'Noto Serif TC', serif; }
+    .shop-close { border: 0; background: none; color: #fff; font-size: 28px; cursor: pointer; }
+    .shop-gold { color: #ffe4a2; font-size: 13px; margin: 8px 0 13px; }
+    .shop-list { display: grid; gap: 8px; }
+    .shop-item { display: flex; align-items: center; gap: 11px; padding: 8px; border: 1px solid #e6d3a344; border-radius: 11px; background: #ffffff0b; }
+    .shop-icon { flex: none; width: 56px; height: 56px; background-image: url('assets/game/town-items.png'); background-size: 400% 200%; background-repeat: no-repeat; }
+    .shop-info { flex: 1; min-width: 0; }
+    .shop-info strong, .shop-info small { display: block; }
+    .shop-info small { color: #d9decf; margin-top: 3px; }
+    .shop-buy { flex: none; min-width: 63px; padding: 8px 6px; border: 1px solid #e9c574; border-radius: 8px; background: #75582e; color: #fff7df; cursor: pointer; }
+    .shop-buy:disabled { opacity: .55; cursor: default; }
+    .shop-message { min-height: 18px; margin: 12px 0 0; color: #ffe9a8; font-size: 13px; }
+    .shop-story { margin-top: 12px; padding: 7px 12px; border: 1px solid #e9c574; border-radius: 8px; background: #ffffff12; color: #fff0c5; cursor: pointer; }
+    .story { display: none; pointer-events: auto; position: fixed; inset: 0; z-index: 6; background: linear-gradient(#101b18c9, #101b18dd); color: #fff5dc; }
+    .story.open { display: block; }
+    .story-portrait { position: absolute; bottom: min(24dvh, 180px); width: min(30vw, 270px); height: min(60dvh, 410px); opacity: .48; transition: opacity .2s, transform .2s; pointer-events: none; }
+    .story-portrait.active { opacity: 1; transform: translateY(-5px); }
+    .story-portrait.left { left: max(4vw, env(safe-area-inset-left)); }
+    .story-portrait.right { right: max(4vw, env(safe-area-inset-right)); }
+    .story-portrait canvas { width: 100%; height: 100%; object-fit: contain; filter: drop-shadow(0 12px 20px #000a); }
+    .story-caption { position: absolute; left: 50%; bottom: max(4dvh, env(safe-area-inset-bottom)); transform: translateX(-50%); width: min(90vw, 740px); min-height: 145px; padding: 18px 22px 16px; border: 1px solid #d9be81; border-radius: 16px; background: #1b2925f2; box-shadow: 0 18px 50px #000a; }
+    .story-name { color: #f2d38b; font: 700 18px Georgia, 'Noto Serif TC', serif; }
+    .story-text { margin: 9px 0 15px; font-size: clamp(15px, 2vw, 19px); line-height: 1.55; }
+    .story-controls { display: flex; align-items: center; justify-content: space-between; gap: 10px; }
+    .story-progress { color: #d3d6c8; font-size: 12px; }
+    .story-next, .story-skip { padding: 8px 14px; border: 1px solid #dfc88d; border-radius: 8px; background: #795d31; color: #fff7df; font: inherit; cursor: pointer; }
+    .story-skip { background: transparent; }
+    .story-buttons { display: flex; gap: 8px; }
+    @media (max-width: 600px) { .story-portrait { bottom: 175px; width: 42vw; height: min(48dvh, 310px); } .story-portrait.left { left: 0; } .story-portrait.right { right: 0; } .story-caption { min-height: 160px; padding: 14px 16px; } }
+    .tip { position: absolute; left: max(18px, env(safe-area-inset-left)); bottom: calc(env(safe-area-inset-bottom) + 27px); max-width: min(48vw, 250px); padding: 10px 12px; border-radius: 12px; background: rgba(13, 34, 28, .63); color: #f2f5e8; font-size: 12px; line-height: 1.45; letter-spacing: .03em; backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px); }
+    .joystick { pointer-events: auto; position: absolute; right: max(22px, env(safe-area-inset-right)); bottom: calc(env(safe-area-inset-bottom) + 22px); width: 128px; height: 128px; border: 1.5px solid rgba(255, 255, 255, .48); border-radius: 50%; background: rgba(242, 252, 239, .13); box-shadow: inset 0 0 22px rgba(255, 255, 255, .07), 0 5px 22px rgba(0, 0, 0, .12); touch-action: none; backdrop-filter: blur(3px); -webkit-backdrop-filter: blur(3px); }
+    .joystick::before, .joystick::after { content: ""; position: absolute; left: 50%; top: 50%; background: rgba(255, 255, 255, .2); transform: translate(-50%, -50%); }
+    .joystick::before { width: 1px; height: 90px; }
+    .joystick::after { width: 90px; height: 1px; }
+    .thumb { position: absolute; z-index: 1; left: 50%; top: 50%; width: 51px; height: 51px; border: 1.5px solid rgba(255, 255, 255, .8); border-radius: 50%; background: rgba(244, 255, 239, .32); box-shadow: 0 3px 12px rgba(0, 0, 0, .17); transform: translate(-50%, -50%); }
+    .loading { position: fixed; inset: 0; z-index: 5; display: grid; place-items: center; background: #17392c; color: #f6f1da; font-size: 16px; letter-spacing: .2em; transition: opacity .35s; }
+    .loading.done { opacity: 0; pointer-events: none; }
+    .start-screen { position: fixed; inset: 0; z-index: 10; display: flex; flex-direction: column; align-items: center; justify-content: space-between; padding: max(5dvh, env(safe-area-inset-top)) 20px max(5dvh, env(safe-area-inset-bottom)); background: #10131d url('assets/previews/entry-screen-v3-fireball.png') center / cover no-repeat; color: #fff0bf; isolation: isolate; }
+    .start-screen[hidden] { display: none; }
+    .start-screen::before { content: ""; position: absolute; inset: 0; z-index: -1; background: linear-gradient(#10131dcc, transparent 32%, transparent 62%, #10131dc9); }
+    .start-title { margin: 0; font: 700 clamp(38px, 7vw, 86px) Georgia, "Noto Serif TC", serif; letter-spacing: .16em; text-align: center; text-shadow: 0 3px 10px #180d0c, 0 0 30px #100a08; }
+    .start-button { min-width: 190px; min-height: 54px; padding: 12px 28px; border: 1px solid #f9dda3; border-radius: 999px; background: #42281ddd; color: #fff2cf; font: 700 21px "Noto Serif TC", serif; letter-spacing: .16em; box-shadow: 0 6px 24px #0009; cursor: pointer; }
+    .start-button:hover, .start-button:focus-visible { background: #68402add; outline: 2px solid #ffe9ae; outline-offset: 3px; }
+    .start-button:disabled { opacity: .7; cursor: wait; }
+    .ending { position: fixed; inset: 0; z-index: 8; overflow: hidden; visibility: hidden; opacity: 0; pointer-events: none; background: #111b25; color: #fff5d6; transition: opacity 4s ease, visibility 0s linear 4s; }
+    .ending.visible { visibility: visible; opacity: 1; pointer-events: auto; transition: opacity 4s ease; }
+    .ending::before { content: ""; position: absolute; inset: -32px; background: url('assets/game/moon-festival-ending.png') center / cover; filter: blur(24px) brightness(.48); }
+    .ending-art { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: contain; }
+    .ending::after { content: ""; position: absolute; inset: 0; background: linear-gradient(#10131d99 0%, transparent 25%, transparent 68%, #10131dc9 100%); pointer-events: none; }
+    .ending-title, .ending-final { max-width: 94vw; margin: 0; text-align: center; white-space: nowrap; opacity: 0; color: #fff0bf; font-family: Georgia, "Noto Serif TC", serif; font-weight: 700; text-shadow: 0 3px 8px #1c1010, 0 0 25px #26130d; }
+    .ending-title { position: absolute; z-index: 1; left: 50%; top: max(5vh, env(safe-area-inset-top)); transform: translate(-50%, 18px); font-size: clamp(30px, 6vw, 80px); letter-spacing: .16em; transition: opacity 1.8s ease 1.7s, transform 1.8s ease 1.7s; }
+    .ending-footer { position: absolute; z-index: 1; left: 0; right: 0; bottom: max(4vh, env(safe-area-inset-bottom)); display: flex; flex-direction: column; align-items: center; gap: 14px; }
+    .ending-final { transform: translateY(18px); font-size: clamp(25px, 4vw, 56px); letter-spacing: .35em; transition: opacity 1.8s ease 3s, transform 1.8s ease 3s; }
+    .ending-restart { min-width: 142px; padding: 11px 25px; border: 1px solid #f8dda0; border-radius: 30px; background: #22352ed9; color: #fff5d6; font: 700 16px "Noto Sans TC", "PingFang TC", sans-serif; letter-spacing: .12em; box-shadow: 0 8px 24px #0008; cursor: pointer; opacity: 0; transform: translateY(18px); pointer-events: none; transition: opacity 1.2s ease 4s, transform 1.2s ease 4s, background .2s ease; }
+    .ending-restart:hover { background: #526648; }
+    .ending-restart:focus-visible { outline: 3px solid #fff0bf; outline-offset: 3px; }
+    .ending.visible .ending-title { opacity: 1; transform: translate(-50%, 0); }
+    .ending.visible .ending-final, .ending.visible .ending-restart { opacity: 1; transform: translateY(0); }
+    .ending.visible .ending-restart { pointer-events: auto; }
+    @media (prefers-reduced-motion: reduce) { .ending, .ending.visible, .ending-title, .ending-final, .ending-restart { transition-duration: .01ms; transition-delay: 0ms; } }
+    @media (max-width: 360px) { .joystick { width: 112px; height: 112px; } .tip { font-size: 11px; } }
+    @media (orientation: landscape) and (max-height: 500px) and (max-width: 1000px) {
+      .start-screen { padding-top: max(3dvh, env(safe-area-inset-top)); padding-bottom: max(3dvh, env(safe-area-inset-bottom)); }
+      .start-title { font-size: clamp(32px, 6vw, 54px); }
+      .start-button { min-height: 45px; padding: 7px 25px; font-size: 17px; }
+      .heading { top: calc(env(safe-area-inset-top) + 10px); left: max(12px, env(safe-area-inset-left)); padding: 7px 11px; }
+      .heading h1 { font-size: 17px; }
+      .health { top: calc(env(safe-area-inset-top) + 72px); left: max(12px, env(safe-area-inset-left)); width: 154px; padding: 7px 9px; font-size: 10px; }
+      .reset { top: calc(env(safe-area-inset-top) + 12px); right: max(12px, env(safe-area-inset-right)); width: 38px; height: 38px; }
+      .music-toggle { right: calc(max(12px, env(safe-area-inset-right)) + 46px); }
+      .tip { left: max(12px, env(safe-area-inset-left)); bottom: calc(env(safe-area-inset-bottom) + 12px); }
+      .joystick { right: max(14px, env(safe-area-inset-right)); bottom: calc(env(safe-area-inset-bottom) + 12px); width: 112px; height: 112px; }
+      .joystick::before { height: 78px; }
+      .joystick::after { width: 78px; }
+      .thumb { width: 45px; height: 45px; }
+      .action { bottom: calc(env(safe-area-inset-bottom) + 137px); padding: 9px 14px; }
+      .story-portrait { bottom: 172px; height: min(49dvh, 190px); width: min(24vw, 200px); }
+      .story-caption { bottom: max(8px, env(safe-area-inset-bottom)); padding: 12px 18px; min-height: 130px; max-height: 48dvh; overflow: auto; }
+      .story-text { margin: 6px 0 9px; font-size: 16px; line-height: 1.4; }
+      .story-name { font-size: 17px; }
+      .story-next, .story-skip { padding: 6px 12px; }
+    }
+  </style>
+</head>
+<body>
+  <canvas id="game" aria-label="竹影迷林探索地圖"></canvas>
+  <div class="hud">
+    <div class="heading"><h1 id="location">竹影迷林</h1><p>小狗俠客・初入江湖</p></div>
+    <div class="health" id="hp" aria-live="polite"></div>
+    <button class="reset" id="reset" type="button" aria-label="返回起點" title="返回起點">⌖</button>
+    <button class="reset music-toggle" id="music-toggle" type="button" aria-label="關閉音樂" aria-pressed="false" title="關閉音樂">♫</button>
+    <div class="tip" id="tip">與三位商人交談，蒐集線索<br>完成後從村莊右邊出發</div>
+    <button class="action" id="action" type="button"></button>
+    <section class="shop" id="shop" role="dialog" aria-modal="true" aria-labelledby="shop-title">
+      <div class="shop-head"><h2 id="shop-title"></h2><button class="shop-close" id="shop-close" type="button" aria-label="關閉商店">×</button></div>
+      <p class="shop-gold" id="shop-gold"></p><div class="shop-list" id="shop-list"></div><p class="shop-message" id="shop-message"></p>
+      <button class="shop-story" id="shop-story" type="button">重聽線索</button>
+    </section>
+    <section class="story" id="story" role="dialog" aria-modal="true" aria-label="故事對話">
+      <div class="story-portrait left" id="story-left"><canvas id="story-dog" width="300" height="410" aria-label="小狗俠客肖像"></canvas></div>
+      <div class="story-portrait right" id="story-right"><canvas id="story-merchant" width="300" height="410" aria-label="商人肖像"></canvas></div>
+      <div class="story-caption" aria-live="polite">
+        <div class="story-name" id="story-name"></div><p class="story-text" id="story-text"></p>
+        <div class="story-controls"><span class="story-progress" id="story-progress"></span><div class="story-buttons"><button class="story-skip" id="story-skip" type="button">跳過序幕</button><button class="story-next" id="story-next" type="button">繼續</button></div></div>
+      </div>
+    </section>
+    <div class="joystick" id="joystick" role="group" aria-label="移動搖桿"><div class="thumb" id="thumb"></div></div>
+  </div>
+  <section class="start-screen" id="start-screen" aria-labelledby="start-title">
+    <h1 class="start-title" id="start-title">中秋事變</h1>
+    <button class="start-button" id="start-button" type="button">進入遊戲</button>
+  </section>
+  <section class="ending" id="ending" aria-label="中秋節結局賀圖" aria-hidden="true" tabindex="-1">
+    <img class="ending-art" src="assets/game/moon-festival-ending.png" alt="小狗俠客與三位商人在滿月下的汴河古鎮歡度中秋">
+    <h2 class="ending-title">中秋節快樂</h2>
+    <div class="ending-footer">
+      <p class="ending-final">全劇終</p>
+      <button class="ending-restart" id="ending-restart" type="button">重新開始</button>
+    </div>
+  </section>
+  <div class="loading" id="loading">汴河古鎮晨霧散去中…</div>
+  <script src="terrain.js"></script>
+  <script src="town-terrain.js"></script>
+  <script src="river-terrain.js"></script>
+  <script src="altar-terrain.js"></script>
+  <script src="daoist-boss.js"></script>
+  <script src="progression.js"></script>
+  <script src="shops.js"></script>
+  <script src="combat-targets.js"></script>
+  <script src="story.js"></script>
+  <script src="chase.js"></script>
+  <script src="forest-spawns.js"></script>
+  <script src="elite-wave.js"></script>
+  <script src="loot.js"></script>
+  <script src="sprite-layouts.js"></script>
+  <script src="attack-layouts.js"></script>
+  <script src="map-music.js"></script>
+  <script src="game.js"></script>
+</body>
+</html>
